@@ -18,41 +18,27 @@
 # along with QEx.  If not, see <http://www.gnu.org/licenses/>.
 #   
 
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 3.9)
 
-# Only set project name if not build from within another project.
-if("${PROJECT_NAME}" STREQUAL "")
-	project (QEx)
+project (QEx LANGUAGES C CXX)
+
+if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    set(QEX_IS_MAIN_PROJECT TRUE)
+else()
+    set(QEX_IS_MAIN_PROJECT FALSE)
 endif()
 
-list (APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-find_package (OpenMesh REQUIRED)
+if (NOT TARGET OpenMeshCore)
+    find_package (OpenMesh REQUIRED)
+endif()
 
-set (SOURCES "")
-set (INCLUDE_DIRS "")
-set (LIBRARIES "")
-set (LIBRARY_DIRS "")
+add_library (QEx interfaces/c/qex.cc src/predicates.c src/MeshExtractor.cc)
+add_library(QEx::QEx ALIAS QEx)
 
-list (APPEND SOURCES interfaces/c/qex.cc src/predicates.c src/MeshExtractor.cc)
-list (APPEND INCLUDE_DIRS ${OPENMESH_INCLUDE_DIRS})
-list (APPEND LIBRARIES ${OPENMESH_LIBRARIES})
-
-include_directories (
-    ${CMAKE_SOURCE_DIR}/interfaces/c
-    ${INCLUDE_DIRS}
-    )
-
-link_directories (
-    ${CMAKE_BINARY_DIR}
-    ${LIBRARY_DIRS}
-    )
-
-add_library (QEx SHARED ${SOURCES})
-add_library (QExStatic STATIC ${SOURCES})
-
-target_link_libraries (QEx ${LIBRARIES})
-target_link_libraries (QExStatic ${LIBRARIES})
+target_link_libraries (QEx OpenMeshCore)
+target_include_directories (QEx PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/interfaces/c")
 
 #
 # In order for the exact predicates to work the compiler
@@ -99,27 +85,14 @@ set_target_properties (QEx
     DEFINE_SYMBOLS "-DQEX_EXPORT_SYMBOLS"
     )
 
-set_target_properties (QExStatic
-    PROPERTIES
-    COMPILE_FLAGS "${QEX_COMPILE_FLAGS}"
-    DEFINE_SYMBOLS "-DQEX_EXPORT_SYMBOLS"
-    )
-
-#
-# Fake successful finder run if compiling as a dependent project.
-#
-if(NOT "${PROJECT_NAME}" MATCHES "QEx")
-	set (QEX_FOUND true PARENT_SCOPE)
-	set (QEX_LIBRARIES QEx PARENT_SCOPE)
-	set (QEX_LIBRARY QEx PARENT_SCOPE)
-	set (QEX_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/interfaces/c" PARENT_SCOPE)
-	set (QEX_LIBRARY_DIR "${CMAKE_CURRENT_BINARY_DIR}" CACHE PATH "The directory where the OpenMesh libraries can be found.")
+option(LIBQEX_BUILD_DEMOS "Whether to build the demo tools." ${QEX_IS_MAIN_PROJECT})
+if (BUILD_DEMOS)
+    add_subdirectory(demo/minimal_c)
+    add_subdirectory(demo/cmdline_tool)
 endif()
 
-add_subdirectory(demo/minimal_c)
-add_subdirectory(demo/cmdline_tool)
-set(BUILD_UNIT_TESTS false CACHE BOOL "Whether to build the unit tests.")
-if (BUILD_UNIT_TESTS)
+option(LIBQEX_BUILD_UNIT_TESTS "Whether to build the unit tests" ${QEX_IS_MAIN_PROJECT})
+if (LIBQEX_BUILD_UNIT_TESTS)
     enable_testing()
     set(GTEST_DIR CACHE PATH "Source path of googletest.")
     if (NOT GTEST_DIR)
@@ -129,12 +102,16 @@ if (BUILD_UNIT_TESTS)
     add_subdirectory(tests)
 endif()
 
-
-find_package(Doxygen)
-if (DOXYGEN_FOUND)
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/doc/Doxyfile @ONLY)
-    add_custom_target(qex_doc
-        ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/doc/Doxyfile
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doc
-        COMMENT "Generating Doxygen documentation" VERBATIM)
-endif()
+option(LIBQEX_BUILD_DOCS "Whether to build the documentation" ${QEX_IS_MAIN_PROJECT})
+if (LIBQEX_BUILD_DOCS)
+    find_package(Doxygen)
+    if (DOXYGEN_FOUND)
+        configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/doc/Doxyfile @ONLY)
+        add_custom_target(qex_doc
+            ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/doc/Doxyfile
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doc
+            COMMENT "Generating Doxygen documentation" VERBATIM)
+    else()
+        message("Doxygen not found, not generating docs.")
+    endif()
+endif ()
