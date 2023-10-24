@@ -2073,12 +2073,13 @@ find_path(const GridVertex& _gv, const LocalEdgeInfo& lei, std::vector<double>& 
       if(!edge_valid_[tri_mesh_.edge_handle(heh_upd).idx()]) {
         // ran into degeneracy
 #ifndef NDEBUG
-      if (verbose)
-          std::cout << "Verbose mode activated. Trace history:"
-              << std::endl << traceHistory.str() << std::endl
-              << "* Trace Result: Traced into Degeneracy." << std::endl;
+        if (verbose) {
+            std::cout << "Verbose mode activated. Trace history:"
+                << std::endl << traceHistory.str() << std::endl
+                << "* Trace Result: Traced into Degeneracy." << std::endl;
+        }
 #endif
-          return FindPathResult::Signal(LocalEdgeInfo::LECI_Traced_Into_Degeneracy);
+        return FindPathResult::Signal(LocalEdgeInfo::LECI_Traced_Into_Degeneracy);
       }
 
 #ifndef NDEBUG
