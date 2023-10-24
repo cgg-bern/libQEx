@@ -40,6 +40,8 @@
 #include <OpenMesh/Core/Mesh/Traits.hh>
 #include <OpenMesh/Core/Mesh/PolyMesh_ArrayKernelT.hh>
 #include <OpenMesh/Core/Mesh/TriMesh_ArrayKernelT.hh>
+#include <OpenMesh/Core/Mesh/DefaultTriMesh.hh>
+#include <OpenMesh/Core/Mesh/DefaultPolyMesh.hh>
 #include <vector>
 
 
@@ -54,16 +56,11 @@ struct PolyTraits : public OpenMesh::DefaultTraits {
 };
 
 /// A shorthand for a suitable OpenMesh quad mesh type.
-typedef OpenMesh::PolyMesh_ArrayKernelT<PolyTraits>  QuadMesh;
-
-struct TriTraits : public OpenMesh::DefaultTraits {
-    typedef OpenMesh::Vec3d Point;
-    typedef OpenMesh::Vec3d Normal;
-    typedef OpenMesh::Vec4f Color;
-};
+typedef OpenMesh::PolyMesh  QuadMesh;
 
 /// A shorthand for a suitable OpenMesh triangle mesh type.
-typedef OpenMesh::TriMesh_ArrayKernelT<TriTraits>  TriMesh;
+//typedef OpenMesh::TriMesh_ArrayKernelT<TriTraits>  TriMesh;
+using OpenMesh::TriMesh;
 
 typedef QuadMesh *QuadMesh_t;
 typedef TriMesh *TriMesh_t;
