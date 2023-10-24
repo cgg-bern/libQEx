@@ -63,7 +63,7 @@ typedef OpenMesh::PolyMesh  QuadMesh;
 using OpenMesh::TriMesh;
 
 typedef QuadMesh *QuadMesh_t;
-typedef TriMesh *TriMesh_t;
+typedef TriMesh const* TriMesh_t;
 typedef const std::vector<unsigned int> *const_ValenceVector_t;
 typedef const std::vector<OpenMesh::Vec2d> *const_UVVector_t;
 
